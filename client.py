@@ -134,8 +134,20 @@ async def get_telegram_client():
 
 
 def hide_session_file(path):
+    """
+    Hide the main session file and its SQLite journal file (Windows only).
+    """
     try:
         FILE_ATTRIBUTE_HIDDEN = 0x02
-        ctypes.windll.kernel32.SetFileAttributesW(path, FILE_ATTRIBUTE_HIDDEN)
+
+        # Hide main session file
+        if os.path.exists(path):
+            ctypes.windll.kernel32.SetFileAttributesW(path, FILE_ATTRIBUTE_HIDDEN)
+
+        # Hide SQLite journal file
+        journal_path = path + "-journal"
+        if os.path.exists(journal_path):
+            ctypes.windll.kernel32.SetFileAttributesW(journal_path, FILE_ATTRIBUTE_HIDDEN)
+
     except Exception:
         pass  # Fail silently
