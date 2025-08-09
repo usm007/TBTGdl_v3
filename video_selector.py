@@ -109,16 +109,31 @@ async def handle_video_selection(client, chat, go_back_callback=None):
 
         for i, video in enumerate(videos, start=1):
             title = getattr(video["msg"], "message", None) or ""
-            if title:
-                m = re.match(r"^\d+\.\s*(.*)", title)
-                if m:
-                    title = f"{i}. {m.group(1)}"
-                else:
-                    title = f"{i}. {title}"
-            else:
+
+            # Remove unwanted strings and trim
+            title = title.replace("Vid_id:", "").replace("Title:", "").strip()
+
+            # Clean newlines and excess spaces
+            video_name = title.replace("\n", " ").replace("\r", " ").strip()
+
+            # If no name, show video ID with extension
+            if not video_name:
                 ext = "." + video["name"].split(".")[-1]
-                title = f"{video['id']}{ext}"
-            console.print(f"[green][{i}][/green] [white]{title}[/white]")
+                video_name = f"{video['id']}{ext}"
+
+            max_len = 70  # max length for name display
+            if len(video_name) > max_len:
+                video_name = video_name[: max_len - 1] + "…"
+
+            size_bytes = video["size"] * 1024 * 1024
+            if size_bytes >= 1024 ** 3:
+                size_str = f"{size_bytes / (1024 ** 3):.2f} GB"
+            else:
+                size_str = f"{size_bytes / (1024 ** 2):.2f} MB"
+
+            console.print(
+                f"[green][{i}][/green] [white]{video_name}[/white] [red]✦ {size_str}[/red]"
+            )
 
         choice = console.input(
             "\n[bold yellow]Enter Choice (a / a,b / a-b / all / 0 to go back): [/bold yellow]"
@@ -145,12 +160,10 @@ async def handle_video_selection(client, chat, go_back_callback=None):
             console.print(f"• {vid['name']}")
         time.sleep(1.5)
 
-        # Prepare lists for download
         messages = [vid["msg"] for vid in to_download]
         file_paths = [os.path.join(download_folder, vid["name"]) for vid in to_download]
         file_sizes = [vid["size"] * 1024 * 1024 for vid in to_download]
 
-        # Call the updated download_with_progress with all videos
         await download_with_progress(messages, file_paths, file_sizes, len(to_download))
 
         print_success("\n✅ All downloads completed successfully! 🎉🎊")

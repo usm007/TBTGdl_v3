@@ -18,9 +18,9 @@ def print_section(title, items):
     table.add_column()
 
     col = []
-    for item in items:
+    for pos, item in enumerate(items):
         display = item["name"]
-        col.append(f"[{item['index']}] {display}")
+        col.append(f"[{pos}] {display}")  # Use list position as index display
         if len(col) == 2:
             table.add_row(*col)
             col = []
@@ -148,11 +148,12 @@ async def select_chat(client):
 
                 if choice.isdigit():
                     idx = int(choice)
-                    if 1 <= idx < len(display_chats):
+                    if 0 < idx < len(display_chats):
                         selected_chat = display_chats[idx]
                         await handle_video_selection(client, selected_chat, go_back_callback=lambda c=client: go_back(c))
                     else:
                         console.print("[red]❌ Choice out of range.[/red]")
+                        await asyncio.sleep(1)  # small pause before re-prompt
                 else:
                     # treat input as new search query string
                     search_query = choice
@@ -164,4 +165,3 @@ async def select_chat(client):
         except:
             pass
         console.print(f"[red]❌ Error: {e}[/red]")
-
